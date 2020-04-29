@@ -1,0 +1,5 @@
+**/*.swp
+**/*.log
+**/__pycache__/*
+conf/*
+hard.shelve
