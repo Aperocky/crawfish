@@ -44,7 +44,8 @@ def create_images():
         .add_column("floor_num", "integer")\
         .add_column("create_time", "text")\
         .add_column("insert_time", "integer")\
-        .add_column("crawled", "tinyint")
+        .add_column("crawled", "tinyint")\
+        .add_column("uuid", "text")
     index = {
         "href_index": ["href"],
         "author_index": ["author"],

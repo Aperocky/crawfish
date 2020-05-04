@@ -59,14 +59,12 @@ class ForumThread(TableItem):
     def get_crawled_status(self):
         if not "crawled" in self.row_tuple:
             return False
-        else:
-            return bool(self.row_tuple["crawled"])
+        return bool(self.row_tuple["crawled"])
 
     def get_image_count(self):
         if not "image_count" in self.row_tuple:
             return 0
-        else:
-            return int(self.row_tuple["image_count"])
+        return int(self.row_tuple["image_count"])
 
     def get_replies(self):
         return int(self.row_tuple["replies"])
