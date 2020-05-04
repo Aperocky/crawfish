@@ -20,7 +20,8 @@ class ForumThread(TableItem):
                 "create_time": create_time,
                 "insert_time": currtime,
                 "update_time": currtime,
-                "update_count": 0
+                "update_count": 0,
+                "crawled": 0,
             }
 
     def update(self, replies, create_time):
@@ -46,8 +47,9 @@ class ForumThread(TableItem):
             return True
         return False
 
-    def mark_as_crawled(self):
+    def mark_as_crawled(self, image_count):
         self.row_tuple["crawled"] = 1
+        self.row_tuple["image_count"] = image_count
         return self
 
     def mark_for_recrawl(self):
@@ -59,6 +61,12 @@ class ForumThread(TableItem):
             return False
         else:
             return bool(self.row_tuple["crawled"])
+
+    def get_image_count(self):
+        if not "image_count" in self.row_tuple:
+            return 0
+        else:
+            return int(self.row_tuple["image_count"])
 
     def get_replies(self):
         return int(self.row_tuple["replies"])

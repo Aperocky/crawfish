@@ -1,6 +1,6 @@
 from src.dao.thread import ForumThread
 from src.ingest.selenium import Selenium
-import json, random
+import json, random, sqlite3
 
 CONF_INI = open('conf/conf.json')
 target = json.load(CONF_INI)["TARGET"]
@@ -16,8 +16,9 @@ AUTH_STRING_RID = "主题作者: "
 
 ff = Selenium.get_instance()
 
+
 def get_batch(url):
-    soup = ff.crawl(url, random.uniform(0.2, 1.2))
+    soup = ff.crawl(url, 20, TITLE_BLOCK)
     threadblock = soup.select(THREADLIST_SELECTOR)[0]
     threadobjs = []
     for thread in threadblock.select(INDIVIDUAL_THREADOR):
@@ -32,6 +33,7 @@ def get_batch(url):
         threadobjs.append(threadobj)
     return threadobjs
 
+
 def runthreads(limit=20000):
     start = 0
     while True:
@@ -40,3 +42,27 @@ def runthreads(limit=20000):
         threadobjs = get_batch(URL_HEAD + str(start))
         start += 50
         yield threadobjs
+
+
+def thread_helper(dao, thread):
+    try:
+        dao.insert_item(thread)
+        return "NEW_ITEM"
+    except sqlite3.IntegrityError:
+        existing_thread = dao.find_item(thread)
+        if existing_thread.same(thread):
+            if existing_thread.get_replies() == thread.get_replies():
+                return "NOT_UPDATED"
+            else:
+                update_thread = existing_thread.update(thread.get_replies(), thread.get_create_time())
+                dao.update_item(update_thread)
+                return "UPDATED"
+        else:
+            print("UNRECONCILABLE DIFF FOUND:")
+            print("EXISTING: {}".format(existing_thread))
+            print("NEW: {}".format(thread))
+            print("===========")
+            return "CANNOT_UPDATE"
+    except Exception as e:
+        print("CAUGHT EXCEPTION: {}".format(e))
+        return "SHIT"
