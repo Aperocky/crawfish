@@ -17,6 +17,12 @@ class Selenium():
             Selenium._INSTANCE = Selenium()
         return Selenium._INSTANCE
 
+    @staticmethod
+    def is_initiated():
+        if Selenium._INSTANCE:
+            return True
+        return False
+
     def __init__(self):
         self.driver = self.get_driver()
 

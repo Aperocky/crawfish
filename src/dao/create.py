@@ -1,21 +1,20 @@
 from sqlitedao import ColumnDict, SqliteDao
 
-DB_NAME = "hard.shelve"
-dao = SqliteDao.get_instance(DB_NAME)
-
 def get_dao():
+    DB_NAME = "hard.shelve"
+    dao = SqliteDao.get_instance(DB_NAME)
     return dao
 
 def create_tables():
+    dao = get_dao()
     if not dao.is_table_exist("threads"):
-        create_threads()
+        create_threads(dao)
     if not dao.is_table_exist("images"):
-        create_images()
+        create_images(dao)
     # 7 manual index + primary key index
     assert len(dao.get_schema("*", "index")) == 7
-    return dao
 
-def create_threads():
+def create_threads(dao):
     # Create threads table
     columns = ColumnDict()\
         .add_column("href", "text", "primary key")\
@@ -32,7 +31,7 @@ def create_threads():
     index = {"author_index": ["author"], "author_id_index": ["author_id"]}
     dao.create_table("threads", columns, index)
 
-def create_images():
+def create_images(dao):
     columns = ColumnDict()\
         .add_column("src", "text", "primary key")\
         .add_column("href", "text", "not null")\

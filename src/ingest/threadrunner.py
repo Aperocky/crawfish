@@ -1,11 +1,13 @@
+from src.dao import create
 from src.dao.thread import ForumThread
 from src.ingest.selenium import Selenium
-import json, random, sqlite3
+from sqlitedao import DuplicateError
+import json, random
+
 
 CONF_INI = open('conf/conf.json')
 target = json.load(CONF_INI)["TARGET"]
 URL_HEAD = "https://tieba.baidu.com/f?kw={}&ie=utf-8&pn=".format(target)
-
 THREADLIST_SELECTOR = "ul#thread_list"
 INDIVIDUAL_THREADOR = "li.j_thread_list.clearfix"
 REP_NUM_CAPT = "span.threadlist_rep_num"
@@ -14,10 +16,36 @@ AUTH_DATA_CAPT = "span.tb_icon_author"
 CREATE_TIME_CAPT = "span.is_show_create_time"
 AUTH_STRING_RID = "主题作者: "
 
-ff = Selenium.get_instance()
+
+# Main func
+def get_threads(limit=500):
+    """
+    Get a list of thread and its info from the forum.
+
+    args:
+        limit: int - the amount of newest thread to ingest based on forum ranking
+    """
+    if type(limit) is not int:
+        limit = int(limit)
+    dao = create.get_dao()
+    create.create_tables()
+    threadgen = runthreads(limit)
+    for threadbatch in threadgen:
+        record = {
+            "NEW_ITEM": 0,
+            "NOT_UPDATED": 0,
+            "UPDATED": 0,
+            "CANNOT_UPDATE": 0,
+            "SHIT": 0,
+        }
+        for thread in threadbatch:
+            record[thread_helper(dao, thread)] += 1
+        print("Batch record: {}".format(record))
+    print("Total of {} threads stored".format(dao.get_row_count("threads")))
 
 
 def get_batch(url):
+    ff = Selenium.get_instance()
     soup = ff.crawl(url, 20, TITLE_BLOCK)
     threadblock = soup.select(THREADLIST_SELECTOR)[0]
     threadobjs = []
@@ -48,7 +76,7 @@ def thread_helper(dao, thread):
     try:
         dao.insert_item(thread)
         return "NEW_ITEM"
-    except sqlite3.IntegrityError:
+    except DuplicateError:
         existing_thread = dao.find_item(thread)
         if existing_thread.same(thread):
             if existing_thread.get_replies() == thread.get_replies():
