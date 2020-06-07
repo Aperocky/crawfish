@@ -55,11 +55,23 @@ class ForumImage(TableItem):
         self.row_tuple["crawled"] = 1
         return self
 
+    def mark_as_uncrawled(self):
+        self.row_tuple["crawled"] = 0
+        return self
+
     def set_uuid(self, imid):
         self.row_tuple["uuid"] = imid
         return self
 
-    def crawl(self):
+    def get_file_path(self):
+        imid = self.get_uuid()
+        if not imid:
+            raise
+        filename = imid + ".jpg"
+        folder = "{}_{}".format(self.get_author(), self.get_author_id())
+        return os.path.join(ForumImage.DROP_ZONE, folder, filename)
+
+    def crawl(self, overwrite=False):
         # Get filename with UUID
         imid = self.get_uuid()
         if imid is None:
@@ -77,7 +89,7 @@ class ForumImage(TableItem):
 
         # Actually make the file
         drop_target = os.path.join(ForumImage.DROP_ZONE, folder, filename)
-        if os.path.isfile(drop_target):
+        if os.path.isfile(drop_target) and not overwrite:
             print("ERROR: file already crawled: {}".format(drop_target))
             self.mark_as_crawled()
             return self
@@ -86,7 +98,7 @@ class ForumImage(TableItem):
             opener.addheaders = [('User-agent',"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36")]
             urllib.request.install_opener(opener)
             urllib.request.urlretrieve(self.get_src(), drop_target)
-        except e:
+        except Exception as e:
             print("ERROR: file download failed: {}".format(e))
             traceback.print_exc()
             return self

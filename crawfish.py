@@ -9,6 +9,7 @@ os.chdir(os.path.dirname(abspath))
 from src.ingest import threadrunner
 from src.ingest import authrunner
 from src.ingest import imrunner
+from src.recon import reconciliation
 from src.ingest.selenium import Selenium
 
 
@@ -37,9 +38,14 @@ def main(args):
         'get_threads': threadrunner.get_threads,
         'get_random_images': authrunner.get_random_images,
         'get_id_images': authrunner.get_id_images,
+        'sample': authrunner.sample,
+        'get_author_id': authrunner.get_author_id,
         'loadrandom': imrunner.load_random_images,
         'load_id_images': imrunner.load_id_images,
+        'remove_id_images': reconciliation.remove_id_images,
         'score_id': imrunner.score_id,
+        'recon_id': reconciliation.recon_id,
+        'recon_multiple_auth_name': reconciliation.reconcile_multiple_auth_name,
     }
     if len(args) > 1:
         if args[1] in ARGS_SELECT:

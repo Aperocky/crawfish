@@ -46,10 +46,28 @@ def get_random_images(limit=500, amount=5, threshold=10):
             print("RUNNING INGEST FOR AUTHOR: {}".format(each["author"]))
             print(spoils["data"])
             summary = run_threads(spoils["threads"])
-            print("NEW RESULTS FOR {}: {}".format(each["author"], summary))
-            counter += 1
+            if summary["author_floor_count"] > 0:
+                print("NEW RESULTS FOR {}: {}".format(each["author"], summary))
+                counter += 1
         if counter >= amount:
             break
+
+
+# Main func
+def sample(author):
+    dao = create.get_dao()
+    images = dao.get_items(ForumImage, {"author": author})
+    sample = random.choice(images)
+    ff_vis = Selenium.get_instance(False)
+    ff_vis.crawl(sample.get_src(), manual_wait=10)
+    print("AUTHOR_ID: {}".format(sample.get_author_id()))
+
+
+# Main func
+def get_author_id(author):
+    dao = create.get_dao()
+    threads = dao.get_items(ForumThread, {"author": author})
+    print("AUTHOR_ID: {}".format(threads[0].get_author_id()))
 
 
 # Main func
@@ -219,5 +237,9 @@ def run_threads(threads):
         except Exception as e:
             print("Thread {} failed, continueing".format(thread.get_href()))
             traceback.print_exc()
+            # Mark as failed so we don't do it over and over again.
+            crawled_thread = thread.mark_as_crawled(-1)
+            dao = create.get_dao()
+            dao.update_item(crawled_thread)
     return general_result
 

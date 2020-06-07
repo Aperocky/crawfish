@@ -11,10 +11,10 @@ class Selenium():
     _INSTANCE = None
 
     @staticmethod
-    def get_instance():
+    def get_instance(headless=True):
         if Selenium._INSTANCE is None:
             print("Did not find existing Selenium instance, initiating")
-            Selenium._INSTANCE = Selenium()
+            Selenium._INSTANCE = Selenium(headless)
         return Selenium._INSTANCE
 
     @staticmethod
@@ -23,8 +23,8 @@ class Selenium():
             return True
         return False
 
-    def __init__(self):
-        self.driver = self.get_driver()
+    def __init__(self, headless=True):
+        self.driver = self.get_driver(headless)
 
     def get_driver(self, headless=True):
         options = webdriver.FirefoxOptions()
@@ -36,12 +36,12 @@ class Selenium():
         driver = webdriver.Firefox(options=options, desired_capabilities=capa)
         return driver
 
-    def crawl(self, url, wait_time=10, wait_target_selector=""):
+    def crawl(self, url, wait_time=10, wait_target_selector="", manual_wait=5):
         self.driver.get(url)
         wait = WebDriverWait(self.driver, wait_time)
         if wait_target_selector:
             wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, wait_target_selector)))
-        time.sleep(5)
+        time.sleep(manual_wait)
         return BeautifulSoup(self.driver.page_source, "lxml")
 
     def quit(self):

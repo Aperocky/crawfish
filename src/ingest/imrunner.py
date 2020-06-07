@@ -3,7 +3,7 @@ from src.dao.thread import ForumThread
 from src.dao.image import ForumImage
 import random, math, time, sys
 import socket
-socket.setdefaulttimeout(30)
+socket.setdefaulttimeout(20)
 
 
 # Main func
@@ -21,6 +21,12 @@ def score_id(author_id, vis=True):
     replies = sum([t.get_replies() for t in threads])
     avg_popularity = replies/len(threads)
     score = math.log(len(images)+1) + (math.log(avg_popularity+1)-2)*2
+    if len(threads) < 3 and avg_popularity < 150:
+        score -= 5
+    if len(images) < 30:
+        score -= 5
+    if avg_popularity < 20:
+        score -= 5
     if vis:
         print("AVG_POPULARITY: {}, ASSET_COUNT: {}".format(avg_popularity, len(images)))
         print("SCORE: {}".format(score))
@@ -47,8 +53,9 @@ def load_random_images(limit=1, threshold=10):
         score = score_id(author["author_id"])
         if score > threshold:
             print("CRAWLING FOR AUTHOR: {}".format(author["author"]))
-            load_id_images(author["author_id"])
-            counter += 1
+            loaded = load_id_images(author["author_id"])
+            if loaded > 0:
+                counter += 1
         if counter >= limit:
             break
 
@@ -64,7 +71,7 @@ def load_id_images(author_id):
     dao = create.get_dao()
     images = dao.get_items(ForumImage, {"author_id": author_id})
     print("Got {} assets".format(len(images)))
-    imrun(dao, images)
+    return imrun(dao, images)
 
 
 def imrun(dao, images):
@@ -85,4 +92,5 @@ def imrun(dao, images):
     if updated_list:
         dao.update_items(updated_list)
     print("\n{}/{} new images successfully loaded".format(len(updated_list), len(new_images)))
+    return counter
 
