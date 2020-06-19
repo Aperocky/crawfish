@@ -44,7 +44,8 @@ def create_images(dao):
         .add_column("create_time", "text")\
         .add_column("insert_time", "integer")\
         .add_column("crawled", "tinyint")\
-        .add_column("uuid", "text")
+        .add_column("uuid", "text")\
+        .add_column("duplicate", "tinyint", "default 0")
     index = {
         "href_index": ["href"],
         "author_index": ["author"],

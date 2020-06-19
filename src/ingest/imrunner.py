@@ -18,14 +18,16 @@ def score_id(author_id, vis=True):
     dao = create.get_dao()
     threads = dao.get_items(ForumThread, {"author_id": author_id})
     images = dao.get_items(ForumImage, {"author_id": author_id})
+    update_counts = sum([t.get_update_count() for t in threads])
     replies = sum([t.get_replies() for t in threads])
     avg_popularity = replies/len(threads)
     score = math.log(len(images)+1) + (math.log(avg_popularity+1)-2)*2
+    score += 0 if (update_counts < 10) else math.log(update_counts+1) - 2
     if len(threads) < 3 and avg_popularity < 150:
         score -= 5
-    if len(images) < 30:
+    if len(images) < 20:
         score -= 5
-    if avg_popularity < 20:
+    if avg_popularity < 15:
         score -= 5
     if vis:
         print("AVG_POPULARITY: {}, ASSET_COUNT: {}".format(avg_popularity, len(images)))

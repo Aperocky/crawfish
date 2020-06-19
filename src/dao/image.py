@@ -40,6 +40,9 @@ class ForumImage(TableItem):
     def get_author(self):
         return str(self.row_tuple["author"])
 
+    def get_href(self):
+        return str(self.row_tuple["href"])
+
     def get_src(self):
         return str(self.row_tuple["src"])
 
@@ -59,6 +62,15 @@ class ForumImage(TableItem):
         self.row_tuple["crawled"] = 0
         return self
 
+    def is_duplicate(self):
+        if not "duplicate" in self.row_tuple:
+            return False
+        return bool(int(self.row_tuple["duplicate"]))
+
+    def mark_as_duplicate(self):
+        self.row_tuple["duplicate"] = 1
+        return self
+
     def set_uuid(self, imid):
         self.row_tuple["uuid"] = imid
         return self
@@ -66,6 +78,8 @@ class ForumImage(TableItem):
     def get_file_path(self):
         imid = self.get_uuid()
         if not imid:
+            raise
+        if self.is_duplicate():
             raise
         filename = imid + ".jpg"
         folder = "{}_{}".format(self.get_author(), self.get_author_id())

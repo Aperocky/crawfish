@@ -20,6 +20,18 @@ DELETED_FLAG = "div#errorText > h1"
 
 
 # Main func
+def get_most_updated(limit=100):
+    if type(limit) is not int:
+        limit = int(limit)
+    dao = create.get_dao()
+    besties = dao.search_table("threads", {}, group_by=["author_id", "author"], limit=limit)
+    updated = [{"update_count": get_author_aggregate_stat(dao, e["author_id"], False)['data']['update_count'], "name": e['author'], "id": e['author_id']} for e in besties]
+    updated.sort(key=lambda x: x['update_count'])
+    for each in updated:
+        print(each)
+
+
+# Main func
 def get_random_images(limit=500, amount=5, threshold=10):
     """
     Deposit info of images found in threads of authors given that they passed the scoring threshold.
@@ -61,6 +73,15 @@ def sample(author):
     ff_vis = Selenium.get_instance(False)
     ff_vis.crawl(sample.get_src(), manual_wait=10)
     print("AUTHOR_ID: {}".format(sample.get_author_id()))
+
+
+# Main func
+def sample_id(author_id):
+    dao = create.get_dao()
+    images = dao.get_items(ForumImage, {"author_id": author_id})
+    sample = random.choice(images)
+    ff_vis = Selenium.get_instance(False)
+    ff_vis.crawl(sample.get_src(), manual_wait=5)
 
 
 # Main func
