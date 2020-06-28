@@ -1,0 +1,7 @@
+{
+    "TARGET": "INSERT_BAR_NAME",
+    "IMSTORE": "INSERT_YOUR_STORAGE_PATH",
+    "FAIL_FILE_PATH": "PATH_OF_EXAMPLE_FAILED_FILE",
+    "BLACKLIST": [],
+    "readme": "The app read from conf.json and not mock_conf.json"
+}
