@@ -85,10 +85,23 @@ def sample_id(author_id):
 
 
 # Main func
-def get_author_id(author):
+def get_author_id(author, vis=True):
     dao = create.get_dao()
     threads = dao.get_items(ForumThread, {"author": author})
-    print("AUTHOR_ID: {}".format(threads[0].get_author_id()))
+    if not threads:
+        return "NO_SUCH_AUTHOR"
+    if vis:
+        print("AUTHOR_ID: {}".format(threads[0].get_author_id()))
+    return threads[0].get_author_id()
+
+
+def get_author_from_id(author_id):
+    dao = create.get_dao()
+    threads = dao.get_items(ForumThread, {"author_id": author_id})
+    author = set()
+    for t in threads:
+        author.add(t.get_author())
+    return list(author)
 
 
 # Main func

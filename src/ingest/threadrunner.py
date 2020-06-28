@@ -8,6 +8,7 @@ import json, random
 CONF_INI = open('conf/conf.json')
 target = json.load(CONF_INI)["TARGET"]
 URL_HEAD = "https://tieba.baidu.com/f?kw={}&ie=utf-8&pn=".format(target)
+URL_HEAD_TOP = "https://tieba.baidu.com/f?kw={}&ie=utf-8&tab=good&pn=".format(target)
 THREADLIST_SELECTOR = "ul#thread_list"
 INDIVIDUAL_THREADOR = "li.j_thread_list.clearfix"
 REP_NUM_CAPT = "span.threadlist_rep_num"
@@ -18,7 +19,7 @@ AUTH_STRING_RID = "主题作者: "
 
 
 # Main func
-def get_threads(limit=500):
+def get_threads(limit=500, top=False):
     """
     Get a list of thread and its info from the forum.
 
@@ -27,9 +28,13 @@ def get_threads(limit=500):
     """
     if type(limit) is not int:
         limit = int(limit)
+    if type(top) is not bool:
+        top = top == "true"
+        if top:
+            print("getting top threads instead")
     dao = create.get_dao()
     create.create_tables()
-    threadgen = runthreads(limit)
+    threadgen = runthreads(limit, top)
     for threadbatch in threadgen:
         record = {
             "NEW_ITEM": 0,
@@ -62,12 +67,15 @@ def get_batch(url):
     return threadobjs
 
 
-def runthreads(limit=20000):
+def runthreads(limit=20000, top=False):
     start = 0
     while True:
         if start > limit:
             break
-        threadobjs = get_batch(URL_HEAD + str(start))
+        if top:
+            threadobjs = get_batch(URL_HEAD_TOP + str(start))
+        else:
+            threadobjs = get_batch(URL_HEAD + str(start))
         start += 50
         yield threadobjs
 

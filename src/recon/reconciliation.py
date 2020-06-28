@@ -20,6 +20,7 @@ def recon_id(author_id, remove_duplicate=False):
     crawled_images = [im for im in images if im.get_crawled_status() and not im.is_duplicate()]
     print("Found {} images to recon".format(len(crawled_images)))
     failed_images = []
+    fubar_images = []
     for image in crawled_images:
         real_path = image.get_file_path()
         if not os.path.isfile(real_path):
@@ -30,11 +31,22 @@ def recon_id(author_id, remove_duplicate=False):
             print("{} has failed".format(real_path))
             os.remove(real_path)
             failed_images.append(image)
+            continue
+        try:
+            Image.open(real_path)
+        except IOError:
+            print("{} is fubar".format(real_path))
+            fubar_images.append(image)
     for each in failed_images:
         each.mark_as_uncrawled()
     print("Found {} images in wrong state".format(len(failed_images)))
     if failed_images:
         dao.update_items(failed_images)
+    for each in fubar_images:
+        each.mark_as_duplicate()
+    print("Found {} images in fubar".format(len(fubar_images)))
+    if fubar_images:
+        dao.update_items(fubar_images)
     reconcile_duplicates(author_id, remove_duplicate)
 
 
@@ -102,8 +114,13 @@ def reconcile_duplicates(author_id, remove=False):
             for image in imlist:
                 print("{} belongs to {}".format(image.get_file_path(), image.get_href()))
             if remove:
-                kept = imlist.pop()
-                print("Keeping: {}".format(kept.get_file_path()))
+                sourced = [im for im in imlist if im.get_href().startswith("/p")]
+                if sourced:
+                    kept = sourced.pop()
+                else:
+                    kept = imlist[0]
+                imlist.remove(kept)
+                print("Keeping: {} from {}".format(kept.get_file_path(), kept.get_href()))
                 for dup in imlist:
                     os.remove(dup.get_file_path())
                     dup.mark_as_duplicate()
@@ -140,8 +157,13 @@ def add_historic_images(dao, flist, href, author, author_id):
         except Exception as e:
             print("Operation for {} failed due to {}".format(f, e))
     if imlist:
-        print("Inserting {} converted images".format(len(imlist)))
-        dao.insert_items(imlist)
+        print("Inserting {} converted images in batches".format(len(imlist)))
+        batch_size = 10
+        i = 0
+        while i < len(imlist):
+            print("INSERT BATCH {}".format(i))
+            dao.insert_items(imlist[i:i+batch_size])
+            i += batch_size
 
 
 # Main func

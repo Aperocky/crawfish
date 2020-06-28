@@ -11,6 +11,7 @@ from src.ingest import authrunner
 from src.ingest import imrunner
 from src.recon import reconciliation
 from src.ingest.selenium import Selenium
+from src.server import server
 
 
 def selenium_wrap(func):
@@ -49,6 +50,7 @@ def main(args):
         'induct_id_history': reconciliation.induct_history,
         'recon_id': reconciliation.recon_id,
         'recon_multiple_auth_name': reconciliation.reconcile_multiple_auth_name,
+        'run_server': server.run_server,
     }
     if len(args) > 1:
         if args[1] in ARGS_SELECT:

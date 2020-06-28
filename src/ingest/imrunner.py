@@ -2,8 +2,13 @@ from src.dao import create
 from src.dao.thread import ForumThread
 from src.dao.image import ForumImage
 import random, math, time, sys
-import socket
+import socket, json
 socket.setdefaulttimeout(20)
+
+
+CONF_INI = open('conf/conf.json')
+BLACKLIST = json.load(CONF_INI)["BLACKLIST"]
+CONF_INI.close()
 
 
 # Main func
@@ -54,6 +59,9 @@ def load_random_images(limit=1, threshold=10):
     for author in authors:
         score = score_id(author["author_id"])
         if score > threshold:
+            if author["author"] in BLACKLIST:
+                print("AUTHOR {} IS IN BLACKLIST, SKIPPING".format(author["author"]))
+                continue
             print("CRAWLING FOR AUTHOR: {}".format(author["author"]))
             loaded = load_id_images(author["author_id"])
             if loaded > 0:
@@ -82,6 +90,8 @@ def imrun(dao, images):
     print("{}/{} images new".format(len(new_images), len(images)))
     counter = 0
     for image in new_images:
+        if not image.get_src().endswith("jpg"):
+            continue
         updated_image = image.crawl()
         counter += 1
         sys.stdout.write(".")
