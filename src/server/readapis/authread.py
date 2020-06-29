@@ -50,7 +50,7 @@ def build_author_result(author, author_id):
     result = {
         "auth_name": author,
         "auth_id": author_id,
-        "auth_score": score_id(author_id),
+        "auth_score": score_id(author_id, False),
     }
     result.update(get_auth_information(author_id))
     result.update(util.SUCCESS_RESULT)
@@ -86,5 +86,6 @@ def auth_info_block(threads, images):
         "image_count": len(images),
         "image_loaded": len([im for im in images if im.get_crawled_status()]),
         "duplicate_count": len([im for im in images if im.is_duplicate()]),
+        "update_count": sum([t.get_update_count() for t in threads]),
     }
 

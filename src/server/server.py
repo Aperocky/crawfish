@@ -26,4 +26,4 @@ def render():
 
 # Main func
 def run_server():
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0", port=5001)
