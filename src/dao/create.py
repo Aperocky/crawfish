@@ -11,8 +11,10 @@ def create_tables():
         create_threads(dao)
     if not dao.is_table_exist("images"):
         create_images(dao)
+    if not dao.is_table_exist("auth_judge"):
+        create_auth_judge(dao)
     # 7 manual index + primary key index
-    assert len(dao.get_schema("*", "index")) == 7
+    assert len(dao.get_schema("*", "index")) == 8
 
 def create_threads(dao):
     # Create threads table
@@ -52,3 +54,18 @@ def create_images(dao):
         "author_id_index": ["author_id"],
     }
     dao.create_table("images", columns, index)
+
+def create_auth_judge(dao):
+    columns = ColumnDict()\
+        .add_column("author_id", "text", "primary key")\
+        .add_column("author", "text", "not null")\
+        .add_column("l_judge", "integer")\
+        .add_column("x_judge", "integer")\
+        .add_column("thread_count", "integer")\
+        .add_column("image_count", "integer")\
+        .add_column("avg_replies", "real")\
+        .add_column("insert_time", "integer")\
+        .add_column("update_time", "integer")\
+        .add_column("update_count", "integer")\
+        .add_column("judge_update_count", "integer")
+    dao.create_table("auth_judge", columns)

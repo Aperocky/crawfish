@@ -3,6 +3,7 @@ from flask import request, jsonify, render_template
 from flask_cors import CORS
 from src.dao import create
 from src.server.readapis.authread import authread
+from src.server.writeapis.authmod import authmod
 from src.server.util import SUCCESS_RESULT
 
 app = Flask(
@@ -11,7 +12,8 @@ app = Flask(
     static_folder="../../assets/static",
     template_folder="../../assets/template"
 )
-app.register_blueprint(authread, url_prefix="/auth")
+app.register_blueprint(authread, url_prefix="/read")
+app.register_blueprint(authmod, url_prefix="/write")
 CORS(app)
 
 @app.route("/")

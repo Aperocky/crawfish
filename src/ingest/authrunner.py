@@ -230,24 +230,42 @@ def run_thread(thread):
         return general_result
     thread_url = MAIN_URL + thread.get_href()
     ff = Selenium.get_instance()
-    try:
-        soup = ff.crawl(thread_url, 50, AUTHOR_FLAG)
-    except:
-        soup = ff.crawl(thread_url)
-        delete_flag = soup.select(DELETED_FLAG)
-        if not delete_flag:
+    retry_count = 0
+
+    # Attempt to get results
+    while True:
+        try:
+            retry_count += 1
+            soup = ff.crawl(thread_url, 20, AUTHOR_FLAG)
+            break
+        except KeyboardInterrupt:
             raise
-        print("{} has been deleted, cannot access")
+        except:
+            if retry_count < 5:
+                print("RETRYING for {} time".format(retry_count))
+                continue
+            print("Can't access thread: {}".format(thread.get_href()))
+            dao = create.get_dao()
+            crawled_thread = thread.mark_as_crawled(-1)
+            dao.update_item(crawled_thread)
+            return general_result
+
+    # Attempt to read results
+    try:
+        posts = soup.select(MAIN_BLOCK_SELECTOR)[0]
+        postlist = soup.select(FLOOR_SELECTOR)
+        for post in postlist:
+            post_result = run_post(post, thread)
+            general_result["author_floor_count"] += int(post_result["authfl"])
+            general_result["image_count"] += post_result["images"]
+    except KeyboardInterrupt:
+        raise
+    except:
+        print("Cannot parse soup: {}".format(thread.get_href()))
         dao = create.get_dao()
-        crawled_thread = thread.mark_as_crawled(general_result["image_count"])
+        crawled_thread = thread.mark_as_crawled(-1)
         dao.update_item(crawled_thread)
         return general_result
-    posts = soup.select(MAIN_BLOCK_SELECTOR)[0]
-    postlist = soup.select(FLOOR_SELECTOR)
-    for post in postlist:
-        post_result = run_post(post, thread)
-        general_result["author_floor_count"] += int(post_result["authfl"])
-        general_result["image_count"] += post_result["images"]
     dao = create.get_dao()
     crawled_thread = thread.mark_as_crawled(general_result["image_count"])
     dao.update_item(crawled_thread)
@@ -263,17 +281,9 @@ def run_threads(threads):
     print("{}/{} Crawled Already".format(len(threads) - len(crawl_list), len(threads)))
     for thread in crawl_list:
         print("Getting Images for {}".format(thread.get_title()))
-        try:
-            thread_result = run_thread(thread)
-            print(thread_result)
-            general_result["author_floor_count"] += thread_result["author_floor_count"]
-            general_result["image_count"] += thread_result["image_count"]
-        except Exception as e:
-            print("Thread {} failed, continueing".format(thread.get_href()))
-            traceback.print_exc()
-            # Mark as failed so we don't do it over and over again.
-            crawled_thread = thread.mark_as_crawled(-1)
-            dao = create.get_dao()
-            dao.update_item(crawled_thread)
+        thread_result = run_thread(thread)
+        print(thread_result)
+        general_result["author_floor_count"] += thread_result["author_floor_count"]
+        general_result["image_count"] += thread_result["image_count"]
     return general_result
 

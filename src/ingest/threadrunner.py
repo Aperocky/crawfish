@@ -51,7 +51,19 @@ def get_threads(limit=500, top=False):
 
 def get_batch(url):
     ff = Selenium.get_instance()
-    soup = ff.crawl(url, 20, TITLE_BLOCK)
+    retry_count = 0
+    while True:
+        try:
+            retry_count += 1
+            soup = ff.crawl(url, 20, TITLE_BLOCK)
+            break
+        except KeyboardInterrupt:
+            raise
+        except:
+            if retry_count < 5:
+                print("RETRYING for {} time".format(retry_count))
+                continue
+            raise
     threadblock = soup.select(THREADLIST_SELECTOR)[0]
     threadobjs = []
     for thread in threadblock.select(INDIVIDUAL_THREADOR):

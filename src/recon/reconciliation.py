@@ -47,7 +47,13 @@ def recon_id(author_id, remove_duplicate=False):
     print("Found {} images in fubar".format(len(fubar_images)))
     if fubar_images:
         dao.update_items(fubar_images)
-    reconcile_duplicates(author_id, remove_duplicate)
+    dup_im_count = reconcile_duplicates(author_id, remove_duplicate)
+    return {
+        'total_image_count': len(crawled_images),
+        'total_failed_count': len(failed_images),
+        'total_fubar_count': len(fubar_images),
+        'total_duplicate_found': dup_im_count,
+    }
 
 
 # Main func
@@ -108,8 +114,10 @@ def reconcile_duplicates(author_id, remove=False):
             hash_records[hastr].append(image)
         else:
             hash_records[hastr] = [image]
+    duplicate_image_count = 0
     for hastr, imlist in hash_records.items():
         if len(imlist) > 1:
+            duplicate_image_count += len(imlist) - 1
             print("Found duplicate imgs: {}".format(hastr))
             for image in imlist:
                 print("{} belongs to {}".format(image.get_file_path(), image.get_href()))
@@ -125,6 +133,7 @@ def reconcile_duplicates(author_id, remove=False):
                     os.remove(dup.get_file_path())
                     dup.mark_as_duplicate()
                 dao.update_items(imlist)
+    return duplicate_image_count
 
 
 def add_historic_thread(dao, author, author_id, flist):

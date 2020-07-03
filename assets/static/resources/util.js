@@ -19,3 +19,9 @@ export function clearElement(element) {
         element.removeChild(element.firstChild);
     }
 }
+
+
+export function alertResults() {
+    alert(JSON.stringify(this.response));
+}
+
