@@ -7,6 +7,7 @@ function writeAuthorData() {
     let desc_col = util.addElement(base, "div", "col-md-6");
     let desc = util.addElement(desc_col, "div", "row");
     let imgs = util.addElement(base, "div", "col-md-6");
+    imgs.setAttribute("id", "img_col");
     if (this.response["image_samples"].length > 1) {
         let sample = util.addElement(imgs, "img");
         let src = this.response["image_samples"][0].split("highway/")[1];
@@ -20,21 +21,82 @@ function writeAuthorData() {
     let infodict = this.response["auth_info"];
     infodict["score"] = this.response["auth_score"]
     writeAuthorInfoBlock(desc, infodict);
+    writeJudgements(desc_col, this.response);
     writeAuthmodBlock(desc_col, this.response["auth_id"], this.response["image_atlarge"]);
 }
 
 
-function writeUncrawledSamples(desc_col, list) {
+function updateSample() {
+    let img_col = document.getElementById("img_col");
+    util.clearElement(img_col);
+    if (this.response["image_samples"].length > 1) {
+        let sample = util.addElement(img_col, "img");
+        let src = this.response["image_samples"][0].split("highway/")[1];
+        sample.setAttribute("src", "/static/symlink/" + src);
+        sample.style.maxHeight = "750px";
+    }
+}
+
+
+function writeJudgements(desc_col, response) {
+    // Judgement line elements
     let desc = util.addElement(desc_col, "div", "row");
-    let ul = util.addElement(desc, "ul");
-    let count = 0;
-    for (let src of list) {
-        count += 1;
-        let li = util.addElement(ul, "li");
-        let a = util.addElement(li, "a");
-        a.setAttribute("href", src);
-        a.setAttribute("rel", 'noreferrer');
-        a.textContent = `sample ${count}`;
+    let ldesc = util.addElement(desc, "div", "col-md-1");
+    let lval = util.addElement(desc, "div", "col-md-2");
+    let xdesc = util.addElement(desc, "div", "col-md-1");
+    let xval = util.addElement(desc, "div", "col-md-2");
+    let finis = util.addElement(desc, "div", "col-md-6");
+    let finisBut = util.addElement(finis, "button", "btn btn-primary");
+    let linput = util.addElement(lval, "input", "form-control");
+    let xinput = util.addElement(xval, "input", "form-control");
+    // Judgement line content
+    ldesc.textContent = "颜";
+    xdesc.textContent = "色";
+    finisBut.textContent = "审"
+    linput.setAttribute("id", "linput");
+    xinput.setAttribute("id", "xinput");
+    linput.setAttribute("placeholder", "N/A");
+    xinput.setAttribute("placeholder", "N/A");
+
+    // Add post event
+    finisBut.addEventListener("click", () => {
+        let lvalue = parseInt(linput.value);
+        let xvalue = parseInt(xinput.value);
+        if (isNaN(lvalue) || isNaN(xvalue)) {
+            console.log(lvalue, xvalue);
+            alert("Values are not integer");
+            return;
+        }
+        let post = {
+            "l_judge": lvalue,
+            "x_judge": xvalue,
+            "author": response["auth_name"],
+            "author_id": response["auth_id"],
+            "thread_count": response["auth_info"]["thread_count"],
+            "image_count": response["auth_info"]["image_count"],
+            "update_count": response["auth_info"]["update_count"],
+            "avg_replies": response["auth_info"]["avg_replies"]
+        };
+        util.ajaxPost("/write/judge_id", post, postJudgement);
+    })
+    util.ajaxGet(`/read/judgement?author_id=${response["auth_id"]}`, getJudgement);
+}
+
+
+function postJudgement() {
+    if (this.response["success"]) {
+        alert("JUDGEMENT ACCEPTED");
+    } else {
+        alert(`Judgement failed: ${this.response["reason"]}`);
+    }
+}
+
+
+function getJudgement() {
+    console.log(this.response);
+    if (this.response["success"]) {
+        document.getElementById("linput").setAttribute("placeholder", this.response["l_judge"]);
+        document.getElementById("xinput").setAttribute("placeholder", this.response["x_judge"]);
     }
 }
 
@@ -95,5 +157,5 @@ randomButton.addEventListener("click", () => {
 
 
 sampleButton.addEventListener("click", () => {
-    util.ajaxGet("/read/sample_img", writeAuthorData);
+    util.ajaxGet("/read/sample_img", updateSample);
 });

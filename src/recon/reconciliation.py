@@ -70,6 +70,7 @@ def remove_id_images(author_id):
         pardirs.add(os.path.dirname(real_path))
         os.remove(real_path)
         image.mark_as_uncrawled()
+    dao.update_items(crawled_images)
     print("Removing {}".format(" ".join(pardirs)))
     for directory in pardirs:
         os.rmdir(directory)

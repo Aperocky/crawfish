@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from src.dao import create
+from src.dao.judgement import Judgement
 from src.dao.thread import ForumThread
 from src.dao.image import ForumImage
 from src.ingest import authrunner
@@ -51,6 +52,25 @@ def refresh():
     if not "author_id" in util.AUTH_CACHE:
         return jsonify(util.fail_with_reason("No record of auth cache for refresh"))
     return jsonify(build_author_result(util.AUTH_CACHE["result"]["auth_name"], util.AUTH_CACHE["result"]["auth_id"]))
+
+
+@authread.route("/judgement", methods=["GET"])
+def get_judgement():
+    author_id = request.args.get("author_id", "")
+    if not author_id:
+        return jsonify(util.fail_with_reason("author_id not passed in"))
+    dao = create.get_dao()
+    dummy = Judgement(author_id=author_id)
+    judgement = dao.find_item(dummy)
+    if judgement:
+        result = {
+            "l_judge": judgement.get_l_judge(),
+            "x_judge": judgement.get_x_judge(),
+        }
+        result.update(util.SUCCESS_RESULT)
+        return jsonify(result)
+    else:
+        return jsonify(util.fail_with_reason("No judgement found"))
 
 
 def build_author_result(author, author_id):

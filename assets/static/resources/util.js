@@ -7,6 +7,15 @@ export function ajaxGet(url, handler) {
     req.send();
 }
 
+export function ajaxPost(url, content, handler) {
+    let req = new XMLHttpRequest();
+    req.addEventListener('load', handler);
+    req.open("post", url);
+    req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    req.responseType = 'json';
+    req.send(JSON.stringify(content));
+}
+
 export function addElement(parent, etype, className="") {
     let e = document.createElement(etype);
     parent.appendChild(e);
