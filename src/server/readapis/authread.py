@@ -12,9 +12,41 @@ authread = Blueprint('authread', __name__)
 
 @authread.route("/random", methods=["GET"])
 def authrandom():
+    crawled = request.args.get('crawled', '')
+    crawled = bool(crawled)
+    tojudge = request.args.get('tojudge', '')
+    tojudge = bool(tojudge)
+    above_l = request.args.get('above_l', '0')
+    above_l = int(above_l)
+    above_x = request.args.get('above_x', '0')
+    above_x = int(above_x)
     dao = create.get_dao()
-    top = dao.search_table("images", {}, group_by=["author_id", "author"], limit=700)
-    auth_select = random.choice(top)
+    top = dao.search_table("images", {}, group_by=["author_id", "author"], limit=1000)
+
+    auth_select = {}
+    while True:
+        auth_select = random.choice(top)
+        c_flag = False if crawled else True
+        t_flag = False if tojudge else True
+        l_flag = False if tojudge else True
+        x_flag = False if tojudge else True
+        judgement = dao.find_item(Judgement(author_id=auth_select["author_id"]))
+        if crawled:
+            images = dao.get_items(ForumImage, {"author_id": auth_select["author_id"]})
+            if any(im.get_crawled_status() for im in images):
+                c_flag = True
+        if tojudge:
+            if judgement:
+                t_flag = True
+            else:
+                continue
+            if judgement.get_l_judge() > above_l:
+                l_flag = True
+            if judgement.get_x_judge() > above_x:
+                x_flag = True
+        if all([c_flag, t_flag, l_flag, x_flag]):
+            break
+
     result = build_author_result(auth_select["author"], auth_select["author_id"])
     return jsonify(result)
 
@@ -66,6 +98,7 @@ def get_judgement():
         result = {
             "l_judge": judgement.get_l_judge(),
             "x_judge": judgement.get_x_judge(),
+            "times_judged": judgement.get_judge_count(),
         }
         result.update(util.SUCCESS_RESULT)
         return jsonify(result)

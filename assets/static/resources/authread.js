@@ -45,16 +45,20 @@ function writeJudgements(desc_col, response) {
     let lval = util.addElement(desc, "div", "col-md-2");
     let xdesc = util.addElement(desc, "div", "col-md-1");
     let xval = util.addElement(desc, "div", "col-md-2");
-    let finis = util.addElement(desc, "div", "col-md-6");
+    let finis = util.addElement(desc, "div", "col-md-2");
+    let status = util.addElement(desc, "div", "col-md-4");
     let finisBut = util.addElement(finis, "button", "btn btn-primary");
+    let statusBut = util.addElement(status, "button", "btn btn-warning");
     let linput = util.addElement(lval, "input", "form-control");
     let xinput = util.addElement(xval, "input", "form-control");
     // Judgement line content
     ldesc.textContent = "颜";
     xdesc.textContent = "色";
-    finisBut.textContent = "审"
+    finisBut.textContent = "审";
+    statusBut.textContent = "0";
     linput.setAttribute("id", "linput");
     xinput.setAttribute("id", "xinput");
+    statusBut.setAttribute("id", "statusBut");
     linput.setAttribute("placeholder", "N/A");
     xinput.setAttribute("placeholder", "N/A");
 
@@ -78,6 +82,9 @@ function writeJudgements(desc_col, response) {
             "avg_replies": response["auth_info"]["avg_replies"]
         };
         util.ajaxPost("/write/judge_id", post, postJudgement);
+        setTimeout(() => {
+            util.ajaxGet(`/read/judgement?author_id=${response["auth_id"]}`, getJudgement);
+        }, 500);
     })
     util.ajaxGet(`/read/judgement?author_id=${response["auth_id"]}`, getJudgement);
 }
@@ -97,6 +104,8 @@ function getJudgement() {
     if (this.response["success"]) {
         document.getElementById("linput").setAttribute("placeholder", this.response["l_judge"]);
         document.getElementById("xinput").setAttribute("placeholder", this.response["x_judge"]);
+        document.getElementById("statusBut").setAttribute("class", "btn btn-success");
+        document.getElementById("statusBut").textContent = (this.response["times_judged"] + 1).toString();
     }
 }
 
@@ -149,13 +158,21 @@ function writeAuthmodBlock(desc_col, author_id, image_atlarge) {
 
 let randomButton = document.getElementById("random");
 let sampleButton = document.getElementById("sample");
+let searchButton = document.getElementById("search");
 
 
 randomButton.addEventListener("click", () => {
-    util.ajaxGet("/read/random", writeAuthorData);
+    util.ajaxGet("/read/random?tojudge=true&above_l=3&above_x=4", writeAuthorData);
 });
 
 
 sampleButton.addEventListener("click", () => {
     util.ajaxGet("/read/sample_img", updateSample);
 });
+
+
+searchButton.addEventListener("click", () => {
+    let author_id = document.getElementById("search_input").value;
+    util.ajaxGet(`/read/find?author_id=${author_id}`, writeAuthorData);
+});
+

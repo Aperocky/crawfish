@@ -53,3 +53,6 @@ class Judgement(TableItem):
 
     def get_avg_replies(self):
         return int(self.row_tuple["avg_replies"])
+
+    def get_judge_count(self):
+        return int(self.row_tuple["judge_update_count"])
