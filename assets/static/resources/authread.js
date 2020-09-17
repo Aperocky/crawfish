@@ -156,23 +156,56 @@ function writeAuthmodBlock(desc_col, author_id, image_atlarge) {
 }
 
 
+function processSelect() {
+    if (this.response['success']) {
+        console.log(this.response);
+        let author_id = this.response["author_id"]
+        util.ajaxGet(`/read/find?author_id=${author_id}`, writeAuthorData);
+    } else {
+        console.log(this.response);
+    }
+}
+
+
 let randomButton = document.getElementById("random");
 let sampleButton = document.getElementById("sample");
 let searchButton = document.getElementById("search");
+let luckButton = document.getElementById("select_random");
 
 
-randomButton.addEventListener("click", () => {
-    util.ajaxGet("/read/random?tojudge=true&above_l=3&above_x=4", writeAuthorData);
-});
+if (randomButton != null) {
+    randomButton.addEventListener("click", () => {
+        // util.ajaxGet("/read/random", writeAuthorData);
+        util.ajaxGet("/read/random?crawled=true", writeAuthorData);
+        // util.ajaxGet("/read/random?tojudge=true&above_l=3&above_x=4", writeAuthorData);
+    });
+}
 
 
-sampleButton.addEventListener("click", () => {
-    util.ajaxGet("/read/sample_img", updateSample);
-});
+if (sampleButton != null) {
+    sampleButton.addEventListener("click", () => {
+        util.ajaxGet("/read/sample_img", updateSample);
+    });
+}
 
 
-searchButton.addEventListener("click", () => {
-    let author_id = document.getElementById("search_input").value;
-    util.ajaxGet(`/read/find?author_id=${author_id}`, writeAuthorData);
-});
+if (searchButton != null) {
+    searchButton.addEventListener("click", () => {
+        let author_id = document.getElementById("search_input").value;
+        util.ajaxGet(`/read/find?author_id=${author_id}`, writeAuthorData);
+    });
+}
 
+
+if (luckButton != null) {
+    luckButton.addEventListener("click", () => {
+        let l_arg = document.getElementById("l_arg").value;
+        let x_arg = document.getElementById("x_arg").value;
+        let content = {
+            'l_arg': l_arg,
+            'x_arg': x_arg,
+        }
+        console.log(content);
+        util.ajaxPost('/search/', content, processSelect);
+    });
+}

@@ -57,13 +57,12 @@ def load_random_images(limit=1, threshold=10):
     random.shuffle(authors)
     counter = 0
     for author in authors:
-        score = score_id(author["author_id"])
+        score = score_id(author["author_id"], vis=False)
         if score > threshold:
             if author["author"] in BLACKLIST:
                 print("AUTHOR {} IS IN BLACKLIST, SKIPPING".format(author["author"]))
                 continue
-            print("CRAWLING FOR AUTHOR: {}".format(author["author"]))
-            loaded = load_id_images(author["author_id"])
+            loaded = load_id_images(author["author_id"], author["author"])
             if loaded > 0:
                 counter += 1
         if counter >= limit:
@@ -71,24 +70,29 @@ def load_random_images(limit=1, threshold=10):
 
 
 # Main func
-def load_id_images(author_id):
+def load_id_images(author_id, convenient_name_for_logging):
     """
     Load the pictures from author to file based on info stored.
 
     args:
         author_id: id of the author
     """
+    bballs = []
+    bballs.append("CRAWLING FOR AUTHOR: {}".format(convenient_name_for_logging))
     dao = create.get_dao()
     images = dao.get_items(ForumImage, {"author_id": author_id})
-    print("Got {} assets".format(len(images)))
-    return imrun(dao, images)
+    bballs.append("Got {} assets".format(len(images)))
+    return imrun(dao, images, bballs)
 
 
-def imrun(dao, images):
+def imrun(dao, images, balls):
     updated_list = []
     new_images = [image for image in images if not image.get_crawled_status()]
-    print("{}/{} images new".format(len(new_images), len(images)))
+    balls.append("{}/{} images new".format(len(new_images), len(images)))
     counter = 0
+    if len(new_images) > 0:
+        for ball in balls:
+            print(ball)
     for image in new_images:
         if not image.get_src().endswith("jpg"):
             continue
@@ -103,6 +107,6 @@ def imrun(dao, images):
             break
     if updated_list:
         dao.update_items(updated_list)
-    print("\n{}/{} new images successfully loaded".format(len(updated_list), len(new_images)))
+        print("\n{}/{} new images successfully loaded".format(len(updated_list), len(new_images)))
     return counter
 
