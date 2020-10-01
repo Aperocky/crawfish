@@ -30,22 +30,26 @@ def check_args(data):
 
 def handle_request(data):
     dao = create.get_dao()
-    spread = 1
+    spread = 0
     l_arg = int(data['l_arg'])
     x_arg = int(data['x_arg'])
     possibles = []
     while True:
-        l_lower = l_arg - spread
-        x_lower = x_arg - spread
-        l_higher = l_arg + spread
-        x_higher = x_arg + spread
+        l_lower = l_arg - (spread + 1) // 4
+        x_lower = x_arg - spread // 4
+        l_higher = l_arg + (spread + 2) // 4
+        x_higher = x_arg + (spread + 3) // 4
         terms = SearchDict()
         terms.add_between('l_judge', l_lower, l_higher)
         terms.add_between('x_judge', x_lower, x_higher)
-        possibles = dao.search_table(TABLE_NAME, terms, debug=True)
+        possibles = dao.search_table(TABLE_NAME, terms)
         print("Found {} matching".format(len(possibles)))
-        if len(possibles) > 0:
+        count = len(possibles)
+        if count > 40:
             break
+        else:
+            if random.random() < count/40:
+                break
         spread += 1
     selected = random.choice(possibles)
     result = {

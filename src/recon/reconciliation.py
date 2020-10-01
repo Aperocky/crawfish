@@ -12,7 +12,12 @@ with open('conf/conf.json') as conf:
 
 
 # Main func
-def recon_id(author_id, remove_duplicate=False):
+def clearhouse(author_id):
+    recon_id(author_id, remove_deleted=True)
+
+
+# Main func
+def recon_id(author_id, remove_duplicate=False, remove_deleted=False):
     if remove_duplicate:
         remove_duplicate=True
     dao = create.get_dao()
@@ -38,7 +43,10 @@ def recon_id(author_id, remove_duplicate=False):
             print("{} is fubar".format(real_path))
             fubar_images.append(image)
     for each in failed_images:
-        each.mark_as_uncrawled()
+        if remove_deleted:
+            each.mark_as_duplicate()
+        else:
+            each.mark_as_uncrawled()
     print("Found {} images in wrong state".format(len(failed_images)))
     if failed_images:
         dao.update_items(failed_images)

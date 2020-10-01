@@ -1,5 +1,6 @@
 import * as util from "./util.js";
 
+var CURRENT_AUTHOR_ID = '000000';
 
 function writeAuthorData() {
     let base = document.getElementById("first");
@@ -18,6 +19,7 @@ function writeAuthorData() {
     title.textContent = this.response["auth_name"];
     let auth_id = util.addElement(desc, "p", "lead");
     auth_id.textContent = this.response["auth_id"];
+    CURRENT_AUTHOR_ID = this.response["auth_id"];
     let infodict = this.response["auth_info"];
     infodict["score"] = this.response["auth_score"]
     writeAuthorInfoBlock(desc, infodict);
@@ -29,12 +31,19 @@ function writeAuthorData() {
 function updateSample() {
     let img_col = document.getElementById("img_col");
     util.clearElement(img_col);
-    if (this.response["image_samples"].length > 1) {
+    if (this.response["img"].length > 0) {
         let sample = util.addElement(img_col, "img");
-        let src = this.response["image_samples"][0].split("highway/")[1];
+        let src = this.response["img"][0].split("highway/")[1];
         sample.setAttribute("src", "/static/symlink/" + src);
         sample.style.maxHeight = "750px";
     }
+
+//    if (this.response["image_samples"].length > 1) {
+//        let sample = util.addElement(img_col, "img");
+//        let src = this.response["image_samples"][0].split("highway/")[1];
+//        sample.setAttribute("src", "/static/symlink/" + src);
+//        sample.style.maxHeight = "750px";
+//    }
 }
 
 
@@ -184,7 +193,11 @@ if (randomButton != null) {
 
 if (sampleButton != null) {
     sampleButton.addEventListener("click", () => {
-        util.ajaxGet("/read/sample_img", updateSample);
+        // util.ajaxGet("/read/sample_img", updateSample);
+        let content = {
+            'author_id': CURRENT_AUTHOR_ID,
+        }
+        util.ajaxPost("/getimg/", content, updateSample);
     });
 }
 

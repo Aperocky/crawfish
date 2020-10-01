@@ -36,6 +36,7 @@ def shutdown():
 
 def main(args):
     ARGS_SELECT = {
+        'clearhouse': reconciliation.clearhouse,
         'get_threads': threadrunner.get_threads,
         'get_random_images': authrunner.get_random_images,
         'get_id_images': authrunner.get_id_images,

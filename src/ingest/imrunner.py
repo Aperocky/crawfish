@@ -62,7 +62,7 @@ def load_random_images(limit=1, threshold=10):
             if author["author"] in BLACKLIST:
                 print("AUTHOR {} IS IN BLACKLIST, SKIPPING".format(author["author"]))
                 continue
-            loaded = load_id_images(author["author_id"], author["author"])
+            loaded = load_id_images(author["author_id"], author["author"], verbose=False)
             if loaded > 0:
                 counter += 1
         if counter >= limit:
@@ -70,7 +70,7 @@ def load_random_images(limit=1, threshold=10):
 
 
 # Main func
-def load_id_images(author_id, convenient_name_for_logging):
+def load_id_images(author_id, convenient_name_for_logging=None, verbose=True):
     """
     Load the pictures from author to file based on info stored.
 
@@ -78,14 +78,20 @@ def load_id_images(author_id, convenient_name_for_logging):
         author_id: id of the author
     """
     bballs = []
-    bballs.append("CRAWLING FOR AUTHOR: {}".format(convenient_name_for_logging))
     dao = create.get_dao()
+    if convenient_name_for_logging is None:
+        threads = dao.get_items(ForumThread, {"author_id": author_id})
+        if threads:
+            convenient_name_for_logging = threads[0].get_author()
+        else:
+            convenient_name_for_logging = author_id
+    bballs.append("CRAWLING FOR AUTHOR: {}".format(convenient_name_for_logging))
     images = dao.get_items(ForumImage, {"author_id": author_id})
     bballs.append("Got {} assets".format(len(images)))
-    return imrun(dao, images, bballs)
+    return imrun(dao, images, bballs, verbose)
 
 
-def imrun(dao, images, balls):
+def imrun(dao, images, balls, verbose):
     updated_list = []
     new_images = [image for image in images if not image.get_crawled_status()]
     balls.append("{}/{} images new".format(len(new_images), len(images)))
@@ -107,6 +113,7 @@ def imrun(dao, images, balls):
             break
     if updated_list:
         dao.update_items(updated_list)
+    if updated_list or verbose:
         print("\n{}/{} new images successfully loaded".format(len(updated_list), len(new_images)))
     return counter
 

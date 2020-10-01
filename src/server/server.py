@@ -4,6 +4,7 @@ from flask_cors import CORS
 from src.dao import create
 from src.server.readapis.authread import authread
 from src.server.readapis.gameread import gameread
+from src.server.readapis.imgread import imgread
 from src.server.writeapis.authmod import authmod
 from src.server.util import SUCCESS_RESULT
 
@@ -16,6 +17,7 @@ app = Flask(
 app.register_blueprint(authread, url_prefix="/read")
 app.register_blueprint(gameread, url_prefix="/search")
 app.register_blueprint(authmod, url_prefix="/write")
+app.register_blueprint(imgread, url_prefix="/getimg")
 CORS(app)
 
 @app.route("/")
